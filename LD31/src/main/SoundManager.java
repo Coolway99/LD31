@@ -40,7 +40,6 @@ class SoundThread extends Thread{
 	}
 	@Override
 	public SoundThread clone(){
-
 		System.out.println("Played Clip!");
 		return new SoundThread(clip);
 	}
