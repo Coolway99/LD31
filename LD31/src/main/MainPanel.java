@@ -17,12 +17,14 @@ import main.player.Ship;
 public class MainPanel extends JPanel{
 	private static final long serialVersionUID = -892554275836568837L;
 	
-	private Image background, laser, bullet, enemy;
+	private Image background, bullet, enemy;
 	private Ship player;
 	private int playerSpeed = 5;
 	private HashMap<Integer, Ship> enemylist = new HashMap<>(25);
 	private HashMap<Integer, Bullet> bulletlist = new HashMap<>(200);
-	/*Front 20 are vertical, last 15 are horizontal*/
+	private HashMap<Integer, Integer> bulletRemove = new HashMap<>(20);
+	private HashMap<Integer, Integer> enemyRemove = new HashMap<>(5);
+	//Front 20 are vertical, last 15 are horizontal
 	private Laser[] laserList = new Laser[35];
 	public MainPanel(){
 		super();
@@ -30,6 +32,7 @@ public class MainPanel extends JPanel{
 		background = tk.createImage(Main.class.getClassLoader().getResource("assets/grid.png"));
 		player = new Ship(tk.createImage(Main.class.getClassLoader().getResource("assets/ship.png")));
 		bullet = tk.createImage(Main.class.getClassLoader().getResource("assets/bullet.png"));
+		enemy = tk.createImage(Main.class.getClassLoader().getResource("assets/enemy.png"));
 		for(int x = 0; x < 20; x++){
 			laserList[x] = new Laser(new Color(0xAAFF0000, true), new Color(0xAA00FF00, true),
 				new Rectangle(x*(805/20), -20, (805/20), 700));
@@ -43,17 +46,28 @@ public class MainPanel extends JPanel{
 	protected void paintComponent(Graphics g){
 		super.paintComponent(g);
 		Ship p;
-		synchronized(player){
-			p = player.clone();
+		
+		try{
+			synchronized(player){
+				p = player.clone();
+			}
+		} catch(NullPointerException e){
+			p = null;
 		}
 		Graphics2D g2 = (Graphics2D) g;
 		g2.drawImage(background, 0, 0, null);
-		g2.setColor(new Color(0xAA00FF00, true));
 		for(int x = 0; x < 35; x++){
 			laserList[x].draw(g2);
 		}
-		g2.drawImage(p.getImage(), p.getX(), p.getY(), null);
-		for(Bullet x : bulletlist.values().toArray(new Bullet[0])){
+		if(p != null){
+			p.draw(g2);
+		}
+		for(Ship enemy : enemylist.values()){
+			if(enemy != null){
+				enemy.draw(g2);
+			}
+		}
+		for(Bullet x : bulletlist.values()){
 			x.draw(g2);
 		}
 	}
@@ -92,39 +106,69 @@ public class MainPanel extends JPanel{
 				bulletlist.put(bulletlist.size(), new Bullet(bullet, player.getX(), player.getY(),
 						(int)(-8*Math.cos(-radAngle)), (int)(-8*Math.sin(radAngle)), 5));
 			}
-			for(Integer y : bulletlist.keySet().toArray(new Integer[0])){
+			for(Integer y : bulletlist.keySet()){
 				Bullet x = bulletlist.get(y);
 				x.move();
-				if(player.getBounds().intersects(x.getBounds())){
-					if(x.Grace <= 0){
-						bulletlist.remove(y);
-						//TODO player kill code
-					}
-				}
-				for(Ship enemy : enemylist.values().toArray(new Ship[0])){
-					if(enemy.getBounds().intersects(x.getBounds())){
+				try{
+					if(player.getBounds().intersects(x.getBounds())){
 						if(x.Grace <= 0){
-							bulletlist.remove(y);
-							//TODO enemy kill code
+							bulletRemove.put(bulletRemove.size(), y);
+							player.kill();
+							player = null;
 						}
+					}
+				} catch (NullPointerException e){
+					Main.update.cancel();
+				}
+				for(Integer y2 : enemylist.keySet()){
+					Ship enemy = enemylist.get(y2);
+					try{
+						if(enemy.getBounds().intersects(x.getBounds())){
+							if(x.Grace <= 0){
+								bulletRemove.put(bulletRemove.size(), y);
+								enemy.kill();
+							}
+						}
+					} catch(NullPointerException e){
+						enemyRemove.put(enemyRemove.size(), y2);
 					}
 				}
 				if(!x.getBounds().intersects(0, 0, 805, 630)){
-					bulletlist.remove(y);
+					bulletRemove.put(bulletRemove.size(), y);
 				}
 			}
 			for(int x = 0; x < 35; x++){
 				try{
 					if(laserList[x].update().intersects(player.getBounds())){
-						//TODO player kill code
+						player.kill();
+						player = null;
 					}
-				} catch(NullPointerException e){}
+				} catch(NullPointerException e){
+					if(player == null){
+						Main.update.cancel();
+					}
+				}
+			}
+			for(Integer y : bulletRemove.keySet()){
+				bulletlist.remove(bulletRemove.get(y));
+				bulletRemove.remove(y);
+			}
+			for(Integer y: enemyRemove.keySet()){
+				enemylist.remove(enemyRemove.get(y));
+				enemyRemove.remove(y);
 			}
 		}
 	}
 	@Override
 	public Dimension getPreferredSize(){
 		return new Dimension(800, 600);
+	}
+	public void spawnEnemy(int x, int y){
+		int key = Main.ran.nextInt();
+		while(enemylist.containsKey(key)){
+			key = Main.ran.nextInt();
+		}
+		enemylist.put(key, new Ship(enemy, new Rectangle(x, y, enemy.getWidth(null), enemy.getHeight(null))));
 	}
 }
 class Bullet{
@@ -162,7 +206,6 @@ class Laser{
 		this.bounds = bounds;
 	}
 	public void draw(Graphics2D g2){
-		Color y = new Color(0, true);
 		Color c = g2.getColor();
 		int r, g, b, a;
 		r = (int)((activated.getRed() * transition) + (deactivated.getRed() * (1-transition)));
