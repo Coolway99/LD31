@@ -1,5 +1,6 @@
 package main.player;
 
+import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.Rectangle;
 import java.awt.image.ImageObserver;
@@ -16,6 +17,15 @@ public class Ship implements ImageObserver{
 		this.bounds = bounds;
 	}
 	public Image getImage(){return this.i;}
+	public void kill(){
+		this.setBounds(new Rectangle(0, 0, 0, 0));
+		this.i = null;
+	}
+	public void draw(Graphics2D g){
+		if(i != null){
+			g.drawImage(i, bounds.x, bounds.y, null);
+		}
+	}
 	/**
 	 * NOTE: Bounds should be the width and height of the image to avoid stretching
 	 */
