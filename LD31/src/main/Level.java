@@ -69,7 +69,7 @@ public class Level {
 			levels[2] = new LevelStructure(){
 				@Override
 				public void execute(){
-					for(int x = 0; x < 19; x++){
+					for(int x = 0; x < 16; x++){
 						Main.mainPanel.startTransition(x, (x*10)+30, true);
 					}
 					for(int x = 0; x < 4; x++){
