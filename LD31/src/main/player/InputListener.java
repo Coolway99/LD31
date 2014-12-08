@@ -9,7 +9,7 @@ import javax.swing.event.MouseInputListener;
 
 public class InputListener implements KeyListener, MouseInputListener{
 
-	public boolean[] keycode = new boolean[6];
+	public boolean[] keycode = new boolean[7];
 	public Point mospos = new Point();
 	@Override
 	public void keyTyped(KeyEvent e){}
@@ -33,6 +33,9 @@ public class InputListener implements KeyListener, MouseInputListener{
 			case KeyEvent.VK_D:
 				keycode[3] = true;
 				break;
+			case KeyEvent.VK_ENTER:
+				keycode[6] = true;
+				break;
 			default:break;
 		}
 	}
@@ -54,6 +57,9 @@ public class InputListener implements KeyListener, MouseInputListener{
 			case KeyEvent.VK_RIGHT:
 			case KeyEvent.VK_D:
 				keycode[3] = false;
+				break;
+			case KeyEvent.VK_ENTER:
+				keycode[6] = false;
 				break;
 			default:break;
 		}
