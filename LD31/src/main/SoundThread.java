@@ -13,7 +13,7 @@ public class SoundThread extends Thread{
 		try {
 			clip = AudioSystem.getClip();
 			clip.open(AudioSystem.getAudioInputStream(Main.class.getClassLoader().getResourceAsStream(url)));
-		} catch (LineUnavailableException | IOException | UnsupportedAudioFileException e) {
+		} catch (LineUnavailableException | IOException | UnsupportedAudioFileException | NullPointerException e) {
 			e.printStackTrace();
 		}
 	}
@@ -22,8 +22,12 @@ public class SoundThread extends Thread{
 	}
 	@Override
 	public void run(){
-		clip.setFramePosition(0);
-		clip.start();
+		try{
+			clip.setFramePosition(0);
+			clip.start();
+		} catch (NullPointerException e){
+			
+		}
 	}
 	public void playClip(){
 		clone().start();
