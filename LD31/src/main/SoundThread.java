@@ -12,7 +12,7 @@ public class SoundThread extends Thread{
 	public SoundThread(String url){
 		try {
 			clip = AudioSystem.getClip();
-			clip.open(AudioSystem.getAudioInputStream(Main.class.getClassLoader().getResourceAsStream(url)));
+			clip.open(AudioSystem.getAudioInputStream(Main.class.getClassLoader().getResource(url)));
 		} catch (LineUnavailableException | IOException | UnsupportedAudioFileException | NullPointerException e) {
 			e.printStackTrace();
 		}
